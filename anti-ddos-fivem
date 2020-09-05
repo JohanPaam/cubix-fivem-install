@@ -29,6 +29,7 @@ $IPTABLES -N SPOOFING
 $IPTABLES -N ICMP_IN
 $IPTABLES -N UDP_IN
 $IPTABLES -N TCP_IN
+$IPTABLES -N TCP_OUT
 
 
 
@@ -51,6 +52,10 @@ $IPTABLES -A INPUT -p udp -j UDP_IN
 
 # On envoi tout le traffic TCP a la chaine TCP_IN
 $IPTABLES -A INPUT -p tcp -j TCP_IN
+
+# Send all TCP traffic to TCP_OUT chain
+$IPTABLES -A OUTPUT -p tcp -j TCP_OUT
+
 
 
 #
@@ -101,8 +106,12 @@ $IPTABLES -A SPOOFING -j RETURN
 
 # Protection Serveur Five M
 # Limitation des paquets / secondes en UDP sur le port 30120
-iptables -A INPUT -p UDP_IN --destination-port 30120 --syn -m state --state NEW -m limit --limit 12/s --limit-burst 14 -j ACCEPT
+$IPTABLES -A INPUT -p UDP_IN --destination-port 30120 --syn -m state --state NEW -m limit --limit 12/s --limit-burst 14 -j ACCEPT
 # Limitation des paquets / secondes en UDP sur les connexions établies sur le port 30120
-iptables -A INPUT -m state --state RELATED,ESTABLISHED -m limit --limit $lim/s --limit-burst $lb -j ACCEPT
+$IPTABLES -A INPUT -m state --state RELATED,ESTABLISHED -m limit --limit 16/s --limit-burst 20 -j ACCEPT
+
+# Ouvertures des Ports Indispensable 
+$IPTABLES -A TCP_IN -p tcp --dport 22 -j ACCEPT
+$IPTABLES -A TCP_OUT -p tcp --dport 22 -j ACCEPT
 
 Script pas encore terminé 

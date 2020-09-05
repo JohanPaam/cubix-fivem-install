@@ -24,6 +24,7 @@ $IPTABLES -P FORWARD DROP
 $IPTABLES -P OUTPUT DROP
 
 # Création de chaines
+$IPTABLES -N COMMON
 $IPTABLES -N PORTSCAN
 $IPTABLES -N SPOOFING
 $IPTABLES -N ICMP_IN
@@ -40,6 +41,9 @@ $IPTABLES -N TCP_OUT
 
 # On envoi tout les traffic a la chaine Portscan
 $IPTABLES -A INPUT -j PORTSCAN
+
+# On envoi tout le traffic a la chaine Common
+$IPTABLES -A INPUT -j COMMON
 
 # On envoi tout le traffic a la chaine Spoofin
 $IPTABLES -A INPUT -j SPOOFING
@@ -78,7 +82,8 @@ $IPTABLES -A PORTSCAN -p tcp --tcp-flags ALL SYN,RST,ACK,FIN,URG -j DROP
 # Return to parent chain
 $IPTABLES -A PORTSCAN -j RETURN 
 
-
+# On bloque l'ICMP (le Ping)
+$IPTABLES -A ICMP_IN -j REJECT --reject-with icmp-proto-unreachable
 
 
 #
@@ -110,8 +115,14 @@ $IPTABLES -A INPUT -p UDP_IN --destination-port 30120 --syn -m state --state NEW
 # Limitation des paquets / secondes en UDP sur les connexions établies sur le port 30120
 $IPTABLES -A INPUT -m state --state RELATED,ESTABLISHED -m limit --limit 16/s --limit-burst 20 -j ACCEPT
 
+# On force la vérification des Paquets en SYN
+iptables -A COMMON -p tcp ! --syn -m state --state NEW -j DROP
+
 # Ouvertures des Ports Indispensable 
 $IPTABLES -A TCP_IN -p tcp --dport 22 -j ACCEPT
 $IPTABLES -A TCP_OUT -p tcp --dport 22 -j ACCEPT
+
+# Autoriser les connexions deja établies 
+$IPTABLES -A COMMON -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 
 Script pas encore terminé 

@@ -1,0 +1,102 @@
+#!/bin/bash +x
+
+# Define variables
+SYSCTL=/usr/bin/sysctl
+IPTABLES=/usr/bin/iptables
+IPTABLES_SAVE=/usr/bin/iptables-save
+IPTABLES_RULE_FILE=/etc/iptables/iptables.rules
+IP_ADDR=192.168.1.70
+BROADCAST=192.168.1.255
+DNS_SERVERS="192.168.1.2"
+SSH=22      # SSH port to connect
+SSHD=22     # SSHd server port
+
+# Activer le rp_filter 
+$SYSCTL net.ipv4.conf.all.rp_filter="1"
+
+# Delete all existing chains and rules
+$IPTABLES -F
+$IPTABLES -X
+
+# Set DROP as default policy
+$IPTABLES -P INPUT DROP
+$IPTABLES -P FORWARD DROP
+$IPTABLES -P OUTPUT DROP
+
+# Création de chaines
+$IPTABLES -N PORTSCAN
+$IPTABLES -N SPOOFING
+$IPTABLES -N ICMP_IN
+$IPTABLES -N UDP_IN
+$IPTABLES -N TCP_IN
+
+
+
+
+#
+# INPUT chain rules
+#
+
+# Send all traffic to PORTSCAN chain
+$IPTABLES -A INPUT -j PORTSCAN
+
+# Send all traffic to SPOOFING chain
+$IPTABLES -A INPUT -j SPOOFING
+
+# Send all ICMP traffic to ICMP_IN chain
+$IPTABLES -A INPUT -p icmp -j ICMP_IN
+
+# Send all UDP traffic to UDP_IN chain
+$IPTABLES -A INPUT -p udp -j UDP_IN
+
+# Send all TCP traffic to TCP_IN chain
+$IPTABLES -A INPUT -p tcp -j TCP_IN
+
+
+#
+# PORTSCAN chain rules
+#
+
+# Drop les attaques de type Portscan
+$IPTABLES -A PORTSCAN -p tcp --tcp-flags ACK,FIN FIN -j DROP
+$IPTABLES -A PORTSCAN -p tcp --tcp-flags ACK,PSH PSH -j DROP
+$IPTABLES -A PORTSCAN -p tcp --tcp-flags ACK,URG URG -j DROP
+$IPTABLES -A PORTSCAN -p tcp --tcp-flags FIN,RST FIN,RST -j DROP
+$IPTABLES -A PORTSCAN -p tcp --tcp-flags SYN,FIN SYN,FIN -j DROP
+$IPTABLES -A PORTSCAN -p tcp --tcp-flags SYN,RST SYN,RST -j DROP
+$IPTABLES -A PORTSCAN -p tcp --tcp-flags ALL ALL -j DROP
+$IPTABLES -A PORTSCAN -p tcp --tcp-flags ALL NONE -j DROP
+$IPTABLES -A PORTSCAN -p tcp --tcp-flags ALL FIN,PSH,URG -j DROP
+$IPTABLES -A PORTSCAN -p tcp --tcp-flags ALL SYN,FIN,PSH,URG -j DROP
+$IPTABLES -A PORTSCAN -p tcp --tcp-flags ALL SYN,RST,ACK,FIN,URG -j DROP
+
+# Return to parent chain
+$IPTABLES -A PORTSCAN -j RETURN 
+
+
+
+
+#
+# Anti-Spoofing règles
+#
+
+# Drop packets claiming to be the loopback interface (protects against source quench)
+$IPTABLES -A SPOOFING ! -i lo -d 127.0.0.0/8 -j DROP
+
+# Drop spoofed packets pretending to be from your IP address
+$IPTABLES -A SPOOFING ! -i lo -s $IP_ADDR -j DROP
+
+# Drop "Class D" multicast addresses. Multicast is illegal as a source address.
+$IPTABLES -A SPOOFING -s 224.0.0.0/4 -j DROP
+
+# Refuse "Class E" reserved IP addresses
+$IPTABLES -A SPOOFING -s 240.0.0.0/5 -j DROP
+
+# Drop broadcast address packets
+$IPTABLES -A SPOOFING ! -i lo -d $BROADCAST -j DROP
+
+# Return to parent chain
+$IPTABLES -A SPOOFING -j RETURN
+
+
+Script pas encore terminé 

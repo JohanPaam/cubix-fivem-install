@@ -1,6 +1,6 @@
 #!/bin/bash +x
 
-# Define variables
+# On defini les variables
 SYSCTL=/usr/bin/sysctl
 IPTABLES=/usr/bin/iptables
 IPTABLES_SAVE=/usr/bin/iptables-save
@@ -18,7 +18,7 @@ $SYSCTL net.ipv4.conf.all.rp_filter="1"
 $IPTABLES -F
 $IPTABLES -X
 
-# Set DROP as default policy
+# On Drop tout les paquets par défaut 
 $IPTABLES -P INPUT DROP
 $IPTABLES -P FORWARD DROP
 $IPTABLES -P OUTPUT DROP
@@ -34,22 +34,22 @@ $IPTABLES -N TCP_IN
 
 
 #
-# INPUT chain rules
+# On configure les chaines
 #
 
-# Send all traffic to PORTSCAN chain
+# On envoi tout les traffic a la chaine Portscan
 $IPTABLES -A INPUT -j PORTSCAN
 
-# Send all traffic to SPOOFING chain
+# On envoi tout le traffic a la chaine Spoofin
 $IPTABLES -A INPUT -j SPOOFING
 
-# Send all ICMP traffic to ICMP_IN chain
+# On envoi tout le traffic ICMP a la chaine ICMP
 $IPTABLES -A INPUT -p icmp -j ICMP_IN
 
-# Send all UDP traffic to UDP_IN chain
+# On envoi tout le traffic UDP a la chaine UDP_IN
 $IPTABLES -A INPUT -p udp -j UDP_IN
 
-# Send all TCP traffic to TCP_IN chain
+# On envoi tout le traffic TCP a la chaine TCP_IN
 $IPTABLES -A INPUT -p tcp -j TCP_IN
 
 

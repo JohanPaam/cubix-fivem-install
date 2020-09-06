@@ -1,5 +1,9 @@
 #!/bin/bash +x
 
+### Script By Johan_Paam ###
+# ATTENTION !!! #
+# C'est un script de prévention contre les attaques, les attaques ne seront pas totalement contrer uniquement atténué et réduite au maximum ! #
+
 # On defini les variables
 SYSCTL=/usr/bin/sysctl
 IPTABLES=/usr/bin/iptables

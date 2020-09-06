@@ -111,7 +111,8 @@ $IPTABLES -A SPOOFING -j RETURN
 
 # Protection Serveur Five M
 # Limitation des paquets / secondes en UDP sur le port 30120
-$IPTABLES -A INPUT -p UDP_IN --destination-port 30120 --syn -m state --state NEW -m limit --limit 12/s --limit-burst 14 -j ACCEPT
+$IPTABLES -A INPUT -p UDP_IN --destination-port 30120 -m state --state NEW -m limit --limit 8/s --limit-burst 10 -j ACCEPT
+$IPTABLES -A INPUT -p TCP_IN --destination-port 30120 -m limit --limit 14/s -j ACCEPT
 # Limitation des paquets / secondes en UDP sur les connexions établies sur le port 30120
 $IPTABLES -A INPUT -m state --state RELATED,ESTABLISHED -m limit --limit 16/s --limit-burst 20 -j ACCEPT
 
